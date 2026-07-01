@@ -326,13 +326,6 @@ def greeting_pair(lang: str) -> tuple[str, str]:
 CROPS: list[dict] = [
     {"key": "paddy",      "icon": "🌿", "hi": "धान",     "en": "Paddy",      "mr": "धान"},
     {"key": "wheat",      "icon": "🌾", "hi": "गेहूँ",   "en": "Wheat",      "mr": "गहू"},
-    {"key": "cotton",     "icon": "🪢", "hi": "कपास",   "en": "Cotton",     "mr": "कापूस"},
-    {"key": "sugarcane",  "icon": "🎋", "hi": "गन्ना",   "en": "Sugarcane",  "mr": "ऊस"},
-    {"key": "maize",      "icon": "🌽", "hi": "मक्का",   "en": "Maize",      "mr": "मका"},
-    {"key": "soybean",    "icon": "🫘", "hi": "सोयाबीन", "en": "Soybean",    "mr": "सोयाबीन"},
-    {"key": "groundnut",  "icon": "🥜", "hi": "मूंगफली", "en": "Groundnut",  "mr": "भुईमूग"},
-    {"key": "vegetables", "icon": "🥦", "hi": "सब्जी",   "en": "Vegetables", "mr": "भाजीपाला"},
-    {"key": "pulses",     "icon": "🫛", "hi": "दाल",     "en": "Pulses",     "mr": "डाळ"},
 ]
 
 

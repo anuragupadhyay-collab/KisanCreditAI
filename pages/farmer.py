@@ -24,7 +24,7 @@ from utils.mock_engine import compute_recommendation
 # CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-_CROP_ROWS: list[list[dict]] = [CROPS[0:3], CROPS[3:6], CROPS[6:9]]
+_CROP_ROWS: list[list[dict]] = [CROPS]
 
 _LAND_PRESETS: list[tuple[float, str]] = [
     (1.0, "1"),
@@ -677,26 +677,25 @@ def _step_crop(lang: str) -> None:
 
     selected = st.session_state.get("crop")
 
-    # Render Crop Cards in 3x3 Grid
-    for row_idx, row in enumerate(_CROP_ROWS):
-        cols = st.columns(3, gap="small")
-        for col, crop_data in zip(cols, row):
-            with col:
-                key  = crop_data["key"]
-                icon = crop_data["icon"]
-                name = crop_data.get(lang, crop_data["en"])
-                active = selected == key
-                lbl  = f"{'✓ ' if active else ''}{icon}\n{name}"
-                if st.button(
-                    lbl,
-                    key=f"crop_{key}",
-                    use_container_width=True,
-                    type="primary" if active else "secondary",
-                ):
-                    st.session_state.crop         = key
-                    st.session_state.farmer_step  = 2
-                    st.session_state.show_val_err = False
-                    st.rerun()
+    # Render Crop Cards in 2-Column Grid
+    cols = st.columns(2, gap="small")
+    for col, crop_data in zip(cols, CROPS):
+        with col:
+            key  = crop_data["key"]
+            icon = crop_data["icon"]
+            name = crop_data.get(lang, crop_data["en"])
+            active = selected == key
+            lbl  = f"{'✓ ' if active else ''}{icon}\n{name}"
+            if st.button(
+                lbl,
+                key=f"crop_{key}",
+                use_container_width=True,
+                type="primary" if active else "secondary",
+            ):
+                st.session_state.crop         = key
+                st.session_state.farmer_step  = 2
+                st.session_state.show_val_err = False
+                st.rerun()
 
     st.markdown('<div class="step-gap"></div>', unsafe_allow_html=True)
 
@@ -859,7 +858,7 @@ def _step_loan(lang: str) -> None:
           <div class="loan-display">
             <div class="loan-display__amount">{_fmt_inr(loan)}</div>
             <div class="loan-display__hint">
-              {"खिसकाकर राशि बदलें" if lang == "hi" else "Drag slider to change"}
+              {"राशि भरें या चुनें" if lang == "hi" else "Enter or pick an amount"}
             </div>
           </div>
         </div>
@@ -867,16 +866,14 @@ def _step_loan(lang: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # Slider
-    new_loan = st.slider(
+    # Number Input (No maximum limit)
+    new_loan = st.number_input(
         "loan_range",
         min_value=10_000,
-        max_value=3_00_000,
         value=loan,
         step=5_000,
-        key="loan_slider",
+        key="loan_input",
         label_visibility="collapsed",
-        format="₹%d",
     )
     if new_loan != loan:
         st.session_state.loan_amount = new_loan
@@ -897,11 +894,8 @@ def _step_loan(lang: str) -> None:
                 type="primary" if active else "secondary",
             ):
                 st.session_state.loan_amount = pval
+                st.session_state.loan_input = pval
                 st.rerun()
-
-    # Info banner
-    info = {"hi": "ℹ️  KCC लोन की अधिकतम सीमा <strong>₹3 लाख</strong> है।", "en": "ℹ️  KCC loan maximum limit is <strong>₹3 lakh</strong>.", "mr": "ℹ️  KCC कर्जाची कमाल मर्यादा <strong>₹3 लाख</strong> आहे."}.get(lang, "Max KCC limit is ₹3L")
-    st.markdown(f'<div class="loan-info-banner">{info}</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="step-gap"></div>', unsafe_allow_html=True)
 
@@ -967,6 +961,32 @@ def _step_result(lang: str) -> None:
     if not result:
         st.session_state.farmer_step = 1
         st.rerun()
+        return
+
+    if "error" in result:
+        error_title = {"hi": "⚠️  त्रुटि", "en": "⚠️  Error", "mr": "⚠️  त्रुटी"}.get(lang, "⚠️ Error")
+        _step_header(lang, 3, error_title, "")
+        st.markdown('<div class="step-gap"></div>', unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="result-card">
+              <div class="result-card__header result-card__header--rejected">
+                <div class="result-card__label">Error</div>
+                <div class="result-card__amount">⚠️ Error</div>
+                <div class="result-card__scheme">Backend Offline</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(f'<div class="result-explain result-explain--rejected">{result["error"]}</div>', unsafe_allow_html=True)
+        
+        retry_lbl = {"hi": "🔄 दोबारा जाँचें", "en": "🔄 Try Again", "mr": "🔄 पुन्हा तपासा"}.get(lang, "🔄 Try Again")
+        if st.button(retry_lbl, key="retry_btn_err", use_container_width=True):
+            st.session_state.farmer_step = 1
+            st.session_state.crop = None
+            st.session_state.result = None
+            st.rerun()
         return
 
     crop_key  = st.session_state.get("crop", "wheat")
