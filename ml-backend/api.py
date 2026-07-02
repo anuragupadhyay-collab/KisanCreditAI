@@ -2,6 +2,9 @@ import os
 import sys
 from fastapi import FastAPI, HTTPException
 from typing import Union, List, Dict, Any
+import sklearn
+import joblib
+import sys
 
 # Ensure that the src directory is in sys.path
 SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
@@ -18,6 +21,14 @@ def read_root():
     return {
         "status": "running",
         "service": "KisanCredit AI Backend"
+    }
+
+@app.get("/version")
+def version():
+    return {
+        "python": sys.version,
+        "sklearn": sklearn.__version__,
+        "joblib": joblib.__version__,
     }
 
 
