@@ -3,15 +3,6 @@
 KisanCredit AI
 Module 5 - Backend Integration
 =========================================================
-
-This module integrates:
-
-1. Price Prediction Model
-2. Financial Engine
-3. Risk Prediction Model
-4. Recommendation Engine
-
-=========================================================
 """
 
 import joblib
@@ -26,50 +17,53 @@ from revenue_engine import (
     compute_debt_to_profit_ratio
 )
 
-from recommendation_engine import (
-    generate_recommendation
-)
-
+from recommendation_engine import generate_recommendation
 
 # -------------------------------------------------------
 # Load Models
 # -------------------------------------------------------
 
 price_model = joblib.load("../models/price_model.pkl")
-
 risk_model = joblib.load("../models/risk_model.pkl")
 
+# -------------------------------------------------------
+# Load Market Dataset
+# -------------------------------------------------------
 
-# -------------------------------------------------------
-# Main Function
-# -------------------------------------------------------
+market_df = pd.read_csv("../data/ricewheatprice.csv")
+
 # -------------------------------------------------------
 # Get Market Data
 # -------------------------------------------------------
 
 def get_market_data(year, month):
     """
-    Fetch market data for the given year and month.
-    """
+    Returns market data for the requested year/month.
 
-    market_df = pd.read_csv("../data/ricewheatprice.csv")
+    If not available, uses the latest available record.
+    """
 
     record = market_df[
         (market_df["Year"] == year) &
         (market_df["Month"] == month)
     ]
 
-    if record.empty:
-        raise ValueError("No market data found for the selected year and month.")
+    if not record.empty:
+        return record.iloc[0]
 
-    return record.iloc[0]
- market = get_market_data(year, month)
+    latest = market_df.sort_values("Year").iloc[-1]
 
-price_rice_ton = market["Price_rice_ton"]
-price_corn_ton = market["Price_corn_ton"]
-inflation_rate = market["Inflation_rate"]
-price_rice_ton_infl = market["Price_rice_ton_infl"]
-price_corn_ton_infl = market["Price_corn_ton_infl"]   
+    print(
+        f"Market data for {month} {year} not found. "
+        f"Using latest available data ({latest['Year']})."
+    )
+
+    return latest
+
+
+# -------------------------------------------------------
+# Main Function
+# -------------------------------------------------------
 
 def analyze_loan(
     year,
@@ -83,29 +77,46 @@ def analyze_loan(
     crop="Wheat",
     state="Punjab"
 ):
-    """
-    Complete backend pipeline.
-    """
 
-    # -----------------------------
+    # ---------------------------------------
+    # Read Market Data
+    # ---------------------------------------
+
+    market = get_market_data(year, month)
+
+    price_rice_ton = market["Price_rice_ton"]
+    price_corn_ton = market["Price_corn_ton"]
+    inflation_rate = market["Inflation_rate"]
+    price_rice_ton_infl = market["Price_rice_ton_infl"]
+    price_corn_ton_infl = market["Price_corn_ton_infl"]
+
+    # ---------------------------------------
     # Price Prediction
-    # -----------------------------
+    # ---------------------------------------
 
     price_input = pd.DataFrame({
+
         "Year": [year],
+
         "Month": [month],
+
         "Price_rice_ton": [price_rice_ton],
+
         "Price_corn_ton": [price_corn_ton],
+
         "Inflation_rate": [inflation_rate],
+
         "Price_rice_ton_infl": [price_rice_ton_infl],
+
         "Price_corn_ton_infl": [price_corn_ton_infl]
+
     })
 
     predicted_price = float(price_model.predict(price_input)[0])
 
-    # -----------------------------
-    # Financial Calculations
-    # -----------------------------
+    # ---------------------------------------
+    # Financial Engine
+    # ---------------------------------------
 
     production = compute_production(
         land_area,
@@ -138,51 +149,73 @@ def analyze_loan(
         profit
     )
 
-    # -----------------------------
+    # ---------------------------------------
     # Risk Prediction
-    # -----------------------------
+    # ---------------------------------------
 
     risk_input = pd.DataFrame({
 
         "Crop": [crop],
+
         "State": [state],
+
         "Land_Area": [land_area],
+
         "Yield_per_Acre": [yield_per_acre],
+
         "Predicted_Price": [predicted_price],
+
         "Cultivation_Cost": [cultivation_cost],
+
         "Production": [production],
+
         "Revenue": [revenue],
+
         "Profit": [profit],
+
         "Loan_Amount": [loan_amount],
+
         "Interest_Rate": [interest_rate],
+
         "Tenure": [tenure_months],
+
         "EMI": [emi],
+
         "Profit_Margin": [profit_margin],
+
         "Debt_to_Profit_Ratio": [debt_ratio]
 
     })
 
     risk = risk_model.predict(risk_input)[0]
 
-    # -----------------------------
+    # ---------------------------------------
     # Recommendation
-    # -----------------------------
+    # ---------------------------------------
 
     recommendation = generate_recommendation(
+
         risk,
+
         profit,
+
         revenue,
+
         emi,
+
         loan_amount,
+
         profit_margin,
+
         debt_ratio
+
     )
 
-    # -----------------------------
-    # Final Output
-    # -----------------------------
+    # ---------------------------------------
+    # Output
+    # ---------------------------------------
 
-    result = {
+    return {
 
         "predicted_price": round(predicted_price, 2),
 
@@ -210,8 +243,6 @@ def analyze_loan(
 
     }
 
-    return result
-
 
 # -------------------------------------------------------
 # Test
@@ -221,19 +252,9 @@ if __name__ == "__main__":
 
     result = analyze_loan(
 
-        year=2025,
+        year=2026,
 
         month="January",
-
-        price_rice_ton=25000,
-
-        price_corn_ton=18000,
-
-        inflation_rate=5.2,
-
-        price_rice_ton_infl=26250,
-
-        price_corn_ton_infl=18900,
 
         land_area=5,
 
