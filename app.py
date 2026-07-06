@@ -251,6 +251,11 @@ def render_home() -> None:
             <span class="footer__tagline">{t(lang, 'footer_tagline')}</span>
           </div>
           <div class="footer__powered">{t(lang, 'footer_powered')}</div>
+          <div class="footer__credits">
+            👨‍💻 Developed by<br>
+            <span class="footer__credit-name">Vansh Shah</span> (Frontend & Integration)<br>
+            <span class="footer__credit-name">Anurag Upadhyay</span> (Backend & Machine Learning)
+          </div>
           <div class="footer__disclaimer">{t(lang, 'footer_disclaimer')}</div>
         </div>
         """,

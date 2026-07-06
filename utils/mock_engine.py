@@ -1,6 +1,6 @@
 import requests
 
-API_URL = "http://127.0.0.1:8000/predict"
+API_URL = "https://kisancreditai.onrender.com/predict"
 
 print("NEW MOCK ENGINE LOADED") 
 

@@ -931,6 +931,19 @@ html, body, [class*="st-"] {
   font-weight: 500;
 }
 
+.footer__credits {
+  font-size: 11px;
+  color: var(--c-text-off);
+  font-weight: 500;
+  line-height: 1.5;
+  margin: var(--sp-2) 0;
+}
+
+.footer__credit-name {
+  color: var(--c-green);
+  font-weight: 700;
+}
+
 .footer__disclaimer {
   font-size: 10px;
   color: var(--c-text-off);
